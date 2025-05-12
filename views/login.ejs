@@ -1,0 +1,15 @@
+<%- include("templates/header") %> 
+
+    <h1>Login</h1>
+    <% if (error) { %><p style="color:red"><%= error %></p><% } %>
+    <form action="/login" method="POST">
+        <label>Email:</label><br>
+        <input type="email" name="email"><br>
+        <label>Password:</label><br>
+        <input type="password" name="password"><br><br>
+        <button type="submit">Log In</button>
+    </form>
+    <br>
+    <a href="/">Back to Home</a>
+    
+<%- include("templates/footer") %> 
