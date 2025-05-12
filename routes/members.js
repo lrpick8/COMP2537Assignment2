@@ -12,7 +12,7 @@ function authMiddleware(req, res, next) {
 router.get('/', authMiddleware, (req, res) => {
   const images = fs.readdirSync(path.join(__dirname, '..', 'public'));
   const randomImage = images[Math.floor(Math.random() * images.length)];
-  res.render('members', { name: req.session.name, image: randomImage });
+  res.render('members', { user: req.session.user, image: randomImage });
 });
 
 router.get('/admin', authMiddleware, async (req, res) => {

@@ -1,0 +1,16 @@
+.navbar-nav {
+    display: flex;
+    flex-direction: row; 
+}
+
+.navbar-nav .nav-item {
+    margin-right: 15px; 
+}
+
+.navbar-nav .nav-link {
+    color: #3ebbf1 !important; 
+}
+
+.navbar-expand-lg .navbar-brand {
+    color: #3ebbf1 !important; 
+}

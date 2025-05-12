@@ -3,6 +3,23 @@ const router = express.Router();
 const Joi = require('joi');
 const User = require('../models/user');
 
+function isAdmin(req, res, next) {
+    if (!req.session.userId) {
+        return res.status(403).send('Access denied. You must be logged in.');
+    }
+
+    // Fetch user from DB to confirm role
+    User.findById(req.session.userId).then(user => {
+        if (!user || user.role !== 'admin') {
+            return res.status(403).render('403', { message: 'You are not listed as an admin and cannot access this page.' });
+        }
+        next();
+    }).catch(err => {
+        return res.status(500).send('Server error');
+    });
+}
+
+
 router.get('/', (req, res) => {
     if(req.session.userId) {
         res.render('home', { name: req.session.name });

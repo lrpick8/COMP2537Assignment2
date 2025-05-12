@@ -13,8 +13,14 @@ const app = express();
 const User = mongoose.model('User', new mongoose.Schema({
     name: String,
     email: String,
-    password: String
+    password: String,
+    role: {
+        type: String,
+        enum: ['user', 'admin'],
+        default: 'user'
+    }
 }));
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -44,6 +50,13 @@ app.use(session({
     }),
     cookie: { maxAge: 60 * 60 * 1000 }
 }));
+
+//Making user accessable in all views (doesn't give an access error)
+app.use((req, res, next) => {
+    res.locals.user = req.session.user || null;  
+    next();
+});
+
 
 //Middleware to check the user's role as either an admin or a regular user
 function isAdmin(req, res, next) {
@@ -87,10 +100,11 @@ app.post('/signup', async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({ name, email, password: hashedPassword });
+    const newUser = await User.create({ name, email, password: hashedPassword });
 
-    req.session.user = { name };
+    req.session.user = { name: newUser.name, role: newUser.role };
     res.redirect('/members');
+
 });
 
 // Log In
@@ -133,7 +147,7 @@ app.post('/login', async (req, res) => {
         });
     }
 
-    req.session.user = { name: user.name };
+    req.session.user = { name: user.name, role: user.role };
     res.redirect('/members');
 });
 
@@ -162,6 +176,10 @@ app.get('/logout', (req, res) => {
 
 // Admin Page
 app.get('/admin', isAdmin, async (req, res) => {
+    if (!req.session.user) {
+            return res.redirect('/');  
+        }
+
     const users = await User.find({});
     res.render('admin', { users });
 });
