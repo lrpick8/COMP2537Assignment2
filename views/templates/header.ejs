@@ -13,14 +13,14 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <a class="navbar-brand" href="/">Cat Displayer</a>
   <div class="navbar-nav ms-auto">
-    <% if (user) { %> <!-- If the user is logged in -->
+    <% if (user) { %> 
       <a class="nav-item nav-link" href="/">Home</a>
       <a class="nav-item nav-link" href="/members">Members</a>
-      <% if (user.role === 'admin') { %> <!-- If the user is an admin -->
+      <% if (user.role === 'admin') { %> 
         <a class="nav-item nav-link" href="/admin">Admin</a>
       <% } %>
       <a class="nav-item nav-link" href="/logout">Logout</a>
-    <% } else { %> <!-- If the user is not logged in -->
+    <% } else { %> 
       <a class="nav-item nav-link" href="/login">Login</a>
       <a class="nav-item nav-link" href="/signup">Sign Up</a>
     <% } %>
