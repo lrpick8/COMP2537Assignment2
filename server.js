@@ -18,13 +18,10 @@ const User = mongoose.model('User', new mongoose.Schema({
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => {
-    console.log('MongoDB connected');
-}).catch(err => {
-    console.error('MongoDB connection error:', err);
-});
+    .then(() => console.log('MongoDB connected'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
-// Set view engine
+// View engine
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -34,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 
-// Session
+// Session setup
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -48,15 +45,28 @@ app.use(session({
     cookie: { maxAge: 60 * 60 * 1000 }
 }));
 
+//Middleware to check the user's role as either an admin or a regular user
+function isAdmin(req, res, next) {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.status(403).render('403', { message: 'You are not listed as an admin, therefore you cannot access this page.' });
+    }
+    next();
+}
+
 // Home Page
 app.get('/', (req, res) => {
-    const user = req.session.user;
-    res.render('index', { user });
+    res.render('index', {
+        user: req.session.user,
+        pageTitle: 'Home'
+    });
 });
 
 // Sign Up
 app.get('/signup', (req, res) => {
-    res.render('signup', { error: null });
+    res.render('signup', {
+        error: null,
+        pageTitle: 'Sign Up'
+    });
 });
 
 app.post('/signup', async (req, res) => {
@@ -70,7 +80,10 @@ app.post('/signup', async (req, res) => {
 
     const { error } = schema.validate({ name, email, password });
     if (error) {
-        return res.render('signup', { error: error.details[0].message });
+        return res.render('signup', {
+            error: error.details[0].message,
+            pageTitle: 'Sign Up'
+        });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -82,7 +95,10 @@ app.post('/signup', async (req, res) => {
 
 // Log In
 app.get('/login', (req, res) => {
-    res.render('login', { error: null });
+    res.render('login', {
+        error: null,
+        pageTitle: 'Log In'
+    });
 });
 
 app.post('/login', async (req, res) => {
@@ -95,17 +111,26 @@ app.post('/login', async (req, res) => {
 
     const { error } = schema.validate({ email, password });
     if (error) {
-        return res.render('login', { error: error.details[0].message });
+        return res.render('login', {
+            error: error.details[0].message,
+            pageTitle: 'Log In'
+        });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-        return res.render('login', { error: 'User and password not found' });
+        return res.render('login', {
+            error: 'User and password not found',
+            pageTitle: 'Log In'
+        });
     }
 
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
-        return res.render('login', { error: 'User and password not found' });
+        return res.render('login', {
+            error: 'User and password not found',
+            pageTitle: 'Log In'
+        });
     }
 
     req.session.user = { name: user.name };
@@ -120,7 +145,12 @@ app.get('/members', (req, res) => {
 
     const images = ['Brucey of Thrones.jpg', 'Brucey Potter.jpg', 'Trailer Park Brucey.jpg'];
     const randomImage = images[Math.floor(Math.random() * images.length)];
-    res.render('members', { user: req.session.user, image: randomImage });
+
+    res.render('members', {
+        user: req.session.user,
+        image: randomImage,
+        pageTitle: 'Members Area'
+    });
 });
 
 // Logout
@@ -130,9 +160,41 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// 404 fallback
+// Admin Page
+app.get('/admin', isAdmin, async (req, res) => {
+    const users = await User.find({});
+    res.render('admin', { users });
+});
+
+// Promoting a user to admin
+app.post('/admin/promote/:id', isAdmin, async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.params.id, { role: 'admin' });
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+// Demoting a user to regular user
+app.post('/admin/demote/:id', isAdmin, async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.params.id, { role: 'user' });
+        res.redirect('/admin');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+});
+
+
+// 404 Page
 app.use((req, res) => {
-    res.status(404).render('404');
+    res.status(404).render('404', {
+        pageTitle: 'Page Not Found',
+        user: req.session.user
+    });
 });
 
 // Start Server

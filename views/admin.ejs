@@ -1,0 +1,36 @@
+<%- include("templates/header", { pageTitle: "Admin Dashboard" }) %>
+
+<h1>Admin Dashboard</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% users.forEach(user => { %>
+            <tr>
+                <td><%= user.name %></td>
+                <td><%= user.email %></td>
+                <td><%= user.role %></td>
+                <td>
+                    <% if (user.role !== 'admin') { %>
+                        <form action="/admin/promote/<%= user._id %>" method="POST" style="display:inline;">
+                            <button class="btn btn-success btn-sm">Promote to Admin</button>
+                        </form>
+                    <% } else { %>
+                        <form action="/admin/demote/<%= user._id %>" method="POST" style="display:inline;">
+                            <button class="btn btn-warning btn-sm">Demote to User</button>
+                        </form>
+                    <% } %>
+                </td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>
+
+<%- include("templates/footer") %>

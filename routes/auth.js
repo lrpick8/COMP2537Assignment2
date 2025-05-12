@@ -70,4 +70,6 @@ router.get('/logout', (req, res) => {
     });
 });
 
+req.session.user = { _id: user._id, name: user.name, role: user.role };
+
 module.exports = router;
